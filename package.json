@@ -38,6 +38,29 @@
         "configuration": "./language-configuration.json"
       }
     ],
+    "configuration": [
+      {
+        "type": "object",
+        "title": "sapf Configuration",
+        "properties": {
+          "sapf.lsp.cmd": {
+            "type": "string",
+            "description": "Path to execute your sapf-lsp executable.",
+            "default": "sapf-lsp"
+          },
+          "sapf.sapf.cmd": {
+            "type": "string",
+            "description": "Path to execute your sapf executable.",
+            "default": "sapf"
+          },
+          "sapf.autostart": {
+            "type": "boolean",
+            "description": "Start sapf automatically when opening sapf file?",
+            "default": true
+          }
+        }
+      }
+    ],
     "keybindings": [
       {
         "command": "sapf.evalBlock",

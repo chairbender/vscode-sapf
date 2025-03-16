@@ -7,8 +7,9 @@ let replProcess: ChildProcessWithoutNullStreams | null = null;
 let outputChannel = vscode.window.createOutputChannel("sapf");
 
 export function activate(context: vscode.ExtensionContext) {
-    // TODO: we need to log what's happening to a special output
-    let serverCommand = 'sapf-lsp';
+    const configuration = vscode.workspace.getConfiguration()
+
+    let serverCommand = configuration.get<string>("sapf.lsp.cmd");
     let serverOptions: ServerOptions = {
         run: { command: serverCommand, options: { env: { PATH: process.env.path } }, transport: TransportKind.stdio },
         debug: { command: serverCommand, options: { env: { PATH: process.env.path } }, transport: TransportKind.stdio }
@@ -22,9 +23,9 @@ export function activate(context: vscode.ExtensionContext) {
     outputChannel.show();
 
     outputChannel.appendLine("Starting sapf language server...")
-    client.start();
-    outputChannel.appendLine("Started sapf language server.")
-
+    client.start().then(() => {
+        outputChannel.appendLine("Started sapf language server.")
+    });
 
     context.subscriptions.push(
         vscode.commands.registerCommand("sapf.start", startRepl),
@@ -38,9 +39,10 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("sapf.helpAll", sapfCommand("helpall"))
     );
 
-    // TODO: configurable to not auto-start
-    startRepl();
 
+    if (configuration.get<boolean>("sapf.autostart")) {
+        startRepl();
+    }
 }
 
 function ensureRunning(): boolean {
@@ -56,7 +58,11 @@ function startRepl() {
         return;
     }
 
-    replProcess = spawn("sapf", [], { env: { PATH: process.env.PATH }, shell: true });
+    const configuration = vscode.workspace.getConfiguration()
+
+    let command = configuration.get<string>("sapf.sapf.cmd");
+
+    replProcess = spawn(command, [], { env: { PATH: process.env.PATH }, shell: true });
 
     replProcess.stdout.on("data", (data) => outputChannel.append(data.toString()));
     replProcess.stderr.on("data", (data) => outputChannel.append(data.toString()));
