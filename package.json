@@ -37,13 +37,6 @@
         ],
         "configuration": "./language-configuration.json"
       }
-    ],
-    "grammars": [
-      {
-        "language": "sapf",
-        "scopeName": "source.sapf",
-        "path": "./syntaxes/sapf.tmLanguage.json"
-      }
     ]
   },
   "dependencies": {

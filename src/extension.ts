@@ -5,10 +5,10 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 let client: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
-    let serverCommand = 'sapf-lsp'; // Change this to the actual LSP binary path
+    let serverCommand = 'sapf-lsp';
     let serverOptions: ServerOptions = {
-        run: { command: serverCommand, transport: TransportKind.stdio },
-        debug: { command: serverCommand, transport: TransportKind.stdio }
+        run: { command: serverCommand, options: { env: { PATH: process.env.path }}, transport: TransportKind.stdio },
+        debug: { command: serverCommand, options: { env: { PATH: process.env.path }}, transport: TransportKind.stdio }
     };
 
     let clientOptions: LanguageClientOptions = {
