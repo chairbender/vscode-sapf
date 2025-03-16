@@ -37,6 +37,44 @@
         ],
         "configuration": "./language-configuration.json"
       }
+    ],
+    "commands": [
+      {
+        "command": "sapf.start",
+        "title": "sapf: Start process"
+      },
+      {
+        "command": "sapf.kill",
+        "title": "sapf: Stop process"
+      },
+      {
+        "command": "sapf.stop",
+        "title": "sapf: (stop) Stop all audio"
+      },
+      {
+        "command": "sapf.clear",
+        "title": "sapf: (clear) clear stack"
+      },
+      {
+        "command": "sapf.cleard",
+        "title": "sapf: (cleard) Clear all but the top item from the stack"
+      },
+      {
+        "command": "sapf.evalBlock",
+        "title": "sapf: Evaluate selection or current block"
+      },
+      {
+        "command": "sapf.evalLine",
+        "title": "sapf: Evaluate selection or current line"
+      },
+      {
+        "command": "sapf.helpWord",
+        "title": "sapf: Get help for the word under the cursor"
+      },
+      {
+        "command": "sapf.helpAll",
+        "title": "sapf: (helpall) Show all commands"
+      }
     ]
   },
   "dependencies": {
