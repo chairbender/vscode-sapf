@@ -18,8 +18,6 @@ export function activate(context: vscode.ExtensionContext) {
         documentSelector: [{ scheme: 'file', language: 'sapf' }]
     };
 
-    // TODO: auto switch to output channel?
-
     client = new LanguageClient('SapfLanguageServer', 'sapf Language Server', serverOptions, clientOptions);
     outputChannel.show();
 
@@ -40,13 +38,16 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("sapf.helpAll", sapfCommand("helpall"))
     );
 
+    // TODO: configurable to not auto-start
+    startRepl();
+
 }
 
 function ensureRunning(): boolean {
     if (!replProcess) {
         vscode.window.showErrorMessage("sapf is not running.");
     }
-    return !replProcess;
+    return replProcess != null;
 }
 
 function startRepl() {
@@ -104,7 +105,7 @@ function flashRange(editor, range) {
     editor.setDecorations(evaluateDecorator, [range]);
 
     setTimeout(() => {
-        evaluateDecorator.dispose
+        evaluateDecorator.dispose();
     }, 300);
 }
 
@@ -119,6 +120,7 @@ function evalSelection(editor: vscode.TextEditor, selectedText: string): boolean
 }
 
 function evalParagraph() {
+    if (!ensureRunning()) { return; }
     requireEditor((editor) => {
         const selectedText = editor.document.getText(editor.selection);
         if (!evalSelection(editor, selectedText)) {
@@ -155,6 +157,7 @@ function evalParagraph() {
 }
 
 function evalBlock() {
+    if (!ensureRunning()) { return; }
     requireEditor((editor) => {
         const selectedText = editor.document.getText(editor.selection);
         if (!evalSelection(editor, selectedText)) {
@@ -178,12 +181,13 @@ function evalBlock() {
 
             if (startIdx == -1) {
                 vscode.window.showErrorMessage("No opening parenthesis found.");
+                return
             }
 
             // go forwards until we find a closing parentheses
             let endLine = startLine;
             while (endLine < totalLines) {
-                const closeParenIdx = document.lineAt(endLine).text.indexOf("(");
+                const closeParenIdx = document.lineAt(endLine).text.indexOf(")");
                 if (closeParenIdx != -1) {
                     endIdx = closeParenIdx;
                     break;
@@ -193,9 +197,10 @@ function evalBlock() {
 
             if (startIdx == -1) {
                 vscode.window.showErrorMessage("No closing parenthesis found.");
+                return;
             }
 
-            const range = new vscode.Range(startLine, startIdx, endLine, endIdx);
+            const range = new vscode.Range(startLine, startIdx, endLine, endIdx + 1);
             const block = document.getText(range);
 
             if (!block.trim()) {
@@ -211,6 +216,7 @@ function evalBlock() {
 }
 
 function evalLine() {
+    if (!ensureRunning()) { return; }
     requireEditor((editor) => {
         const selectedText = editor.document.getText(editor.selection);
         if (!evalSelection(editor, selectedText)) {
