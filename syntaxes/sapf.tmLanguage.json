@@ -13,8 +13,19 @@
 		"name": "number.sapf",
 		"match": "(?<![\\w\\-\\.])\\-?\\d*\\.?\\d*e?(\\-?\\d*\\.?\\d*)?(pi|[Mkhcmu])?(?![\\w\\.])"
 	  },
+	  { 
+		"begin": "\"",
+		"end": "\"",
+		"name": "string.sapf",
+		"patterns": [
+		  {
+			"match": "\\\\\\\\.",
+			"name": "string.escape.sapf"
+		  }
+		]
+	  },
 	  {
-		"name": "fraction.sapf",
+		"name": "word.sapf",
 		"match": "TODO"
 	  },
 	  {
