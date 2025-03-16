@@ -4,6 +4,8 @@ WIP. Contributions welcome. I'm a typescript novice.
 
 This relies on https://github.com/vasilymilovidov/sapf-lsp for the LSP.
 
+Based on the excellent supercollider extension: https://github.com/scztt/vscode-supercollider
+
 ## Setup
 
 1. Follow insructions at https://github.com/vasilymilovidov/sapf-lsp to build the LSP

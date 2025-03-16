@@ -61,15 +61,15 @@
       },
       {
         "command": "sapf.evalBlock",
-        "title": "sapf: Evaluate selection or current block"
+        "title": "sapf: Evaluate block (defined by parentheses) or selection"
+      },
+      {
+        "command": "sapf.evalParagraph",
+        "title": "sapf: Evaluate paragraph (defined by blank lines above / below) or selection"
       },
       {
         "command": "sapf.evalLine",
-        "title": "sapf: Evaluate selection or current line"
-      },
-      {
-        "command": "sapf.helpWord",
-        "title": "sapf: Get help for the word under the cursor"
+        "title": "sapf: Evaluate line or selection"
       },
       {
         "command": "sapf.helpAll",
