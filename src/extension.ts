@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind, Message, ErrorHandlerResult, CloseHandlerResult, CloseAction, ErrorAction } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
 let replProcess: ChildProcessWithoutNullStreams | null = null;
@@ -16,7 +16,12 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     let clientOptions: LanguageClientOptions = {
-        documentSelector: [{ scheme: 'file', language: 'sapf' }]
+        documentSelector: [{ scheme: 'file', language: 'sapf' }],
+        middleware: {
+            async provideDocumentRangeSemanticTokens(document, token, next) {
+                return undefined; // sapf-lsp doesn't support this currently
+            },
+        },
     };
 
     client = new LanguageClient('SapfLanguageServer', 'sapf Language Server', serverOptions, clientOptions);

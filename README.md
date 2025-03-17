@@ -19,6 +19,7 @@ Based on the excellent supercollider VS Code extension: https://github.com/scztt
 1. Make sure the sapf executable is also on your PATH.
 1. If you had to change your PATH variable, you may need to restart VSCode to pick up the change.
 1. Extension will apply when file ends in .sapf or can be chosen manually via VSCode (bottom right).
+    - ATTOW you may get an error popup "Request textDocument/semanticTokens/range failed.". You can ignore it. Working on it...
 1. Bring up the command palette and type "sapf" to see available commands and their keybinds.
 
 ## Usage
@@ -27,6 +28,10 @@ sapf-lsp and sapf will start when opening an sapf file for the first time in a s
 This can be changed in settings.
 
 Open the command palette and type "sapf" for available commands / keybinds.
+
+## Known Issues
+
+Getting "Request textDocument/semanticTokens/range failed" popup when first launching: https://github.com/vasilymilovidov/sapf-lsp/issues/1
 
 ## Development
 

@@ -45,12 +45,12 @@
         "properties": {
           "sapf.lsp.cmd": {
             "type": "string",
-            "description": "Path to execute your sapf-lsp executable.",
+            "description": "Path to sapf-lsp executable.",
             "default": "sapf-lsp"
           },
           "sapf.sapf.cmd": {
             "type": "string",
-            "description": "Path to execute your sapf executable.",
+            "description": "Path to sapf executable.",
             "default": "sapf"
           },
           "sapf.autostart": {
