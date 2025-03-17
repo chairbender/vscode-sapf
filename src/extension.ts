@@ -23,9 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
     outputChannel.show();
 
     outputChannel.appendLine("Starting sapf language server...")
-    client.start().then(() => {
-        outputChannel.appendLine("Started sapf language server.")
-    });
+    client.start();
 
     context.subscriptions.push(
         vscode.commands.registerCommand("sapf.start", startRepl),
