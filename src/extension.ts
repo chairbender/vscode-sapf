@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind, Message, ErrorHandlerResult, CloseHandlerResult, CloseAction, ErrorAction } from 'vscode-languageclient/node';
+import pty from 'node-pty';
+import { buffer } from 'stream/consumers';
 
 let client: LanguageClient;
 let replProcess: ChildProcessWithoutNullStreams | null = null;
@@ -9,21 +11,21 @@ let outputChannel = vscode.window.createOutputChannel("sapf");
 export function activate(context: vscode.ExtensionContext) {
     const configuration = vscode.workspace.getConfiguration()
 
-    let serverCommand = configuration.get<string>("sapf.lsp.cmd");
-    let serverOptions: ServerOptions = {
-        run: { command: serverCommand, options: { env: { PATH: process.env.path } }, transport: TransportKind.stdio },
-        debug: { command: serverCommand, options: { env: { PATH: process.env.path } }, transport: TransportKind.stdio }
-    };
+    // let serverCommand = configuration.get<string>("sapf.lsp.cmd");
+    // let serverOptions: ServerOptions = {
+    //     run: { command: serverCommand, options: { env: process.env}, transport: TransportKind.stdio },
+    //     debug: { command: serverCommand, options: { env: process.env}, transport: TransportKind.stdio }
+    // };
 
-    let clientOptions: LanguageClientOptions = {
-        documentSelector: [{ scheme: 'file', language: 'sapf' }]
-    };
+    // let clientOptions: LanguageClientOptions = {
+    //     documentSelector: [{ scheme: 'file', language: 'sapf' }]
+    // };
 
-    client = new LanguageClient('SapfLanguageServer', 'sapf Language Server', serverOptions, clientOptions);
-    outputChannel.show();
+    // client = new LanguageClient('SapfLanguageServer', 'sapf Language Server', serverOptions, clientOptions);
+    // outputChannel.show();
 
-    outputChannel.appendLine("Starting sapf language server...")
-    client.start();
+    // outputChannel.appendLine("Starting sapf language server...")
+    // client.start();
 
     context.subscriptions.push(
         vscode.commands.registerCommand("sapf.start", startRepl),
@@ -58,14 +60,48 @@ function startRepl() {
 
     const configuration = vscode.workspace.getConfiguration()
 
-    let command = configuration.get<string>("sapf.sapf.cmd");
+    let command = "gstdbuf"; // configuration.get<string>("sapf.sapf.cmd");
 
-    replProcess = spawn(command, [], { env: { PATH: process.env.PATH }, shell: true });
+    outputChannel.appendLine("Starting sapf ..." + command)
+    // replProcess = spawn(command, ['-oL', 'sapf'], { env: {
+    //     PATH: process.env.PATH,
+    //     HOME: process.env.HOME
+    // }, shell: true, cwd: process.env.HOME});
+    // works, but only gets output, doesn't echo the prompt either
+    //replProcess = spawn("gstdbuf", ['-oL', 'sapf'], { env: process.env, shell: true, cwd: process.env.HOME});
+    replProcess = pty.spawn("sapf", [], {
+        env: {
+            PATH: process.env.PATH,
+            HOME: process.env.HOME 
+        },
+        cwd: process.env.HOME,
+        cols: 80,
+        rows: 30,
+        name: 'xterm-color'
+    });
+    
+    //replProcess = spawn("sapf", [], { stdio: 'overlapped', env: process.env, shell: true, cwd: process.env.HOME});
+    //replProcess.stdout.pipe(process.stdout);
 
-    replProcess.stdout.on("data", (data) => outputChannel.append(data.toString()));
-    replProcess.stderr.on("data", (data) => outputChannel.append(data.toString()));
+    replProcess.stdout.on("data", handleEvent);// (data) => outputChannel.append(data.toString()));
+    replProcess.stderr.on("data", handleEvent);//outputChannel.append(data.toString()));
+    //replProcess.stdin.on("data", handleEvent);
+    // replProcess.stdout.on("close", (data) => handleEvent("data", data));
+    // replProcess.stdout.on("data", (data) => handleEvent("data", data));
+    // replProcess.stdout.on("end", (data) => handleEvent("data", data));
+    // replProcess.stdout.on("error", (data) => handleEvent("data", data));
+    // replProcess.stdout.on("pause", (data) => handleEvent("data", data));
+    // replProcess.stdout.on("readable", (data) => handleEvent("data", data));
+    // replProcess.stdout.on("resume", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("close", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("data", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("end", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("error", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("pause", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("readable", (data) => handleEvent("data", data));
+    // replProcess.stderr.on("resume", (data) => handleEvent("data", data));
 
-    replProcess.on("exit", () => {
+    replProcess.addListener("exit", () => {
         vscode.window.showInformationMessage("sapf exited.");
         replProcess = null;
     });
@@ -73,11 +109,18 @@ function startRepl() {
     outputChannel.show();
 }
 
+function handleEvent(data) {
+    //console.log("Handling event: " + event + " with data: " + data);
+    outputChannel.append(data.toString());
+}
+
 function killRepl() {
     if (!ensureRunning()) { return; }
 
+    // TODO: kill on OSX not working seemingly
     if (replProcess.kill()) {
         vscode.window.showInformationMessage("sapf stopped.")
+        replProcess = null;
     } else {
         vscode.window.showInformationMessage("Unable to stop sapf.")
     }
