@@ -13,7 +13,8 @@ Based on the excellent supercollider VS Code extension: https://github.com/scztt
 2. Interact with sapf (evaluate code, start, stop, etc...)
 
 ## Setup
-
+1. Download the .vsix file from the latest release: https://github.com/chairbender/vscode-sapf/releases
+1. Install the extension in vscode (from the command palette: "Extensions: Install from VSIX...")
 1. Follow insructions at https://github.com/vasilymilovidov/sapf-lsp to build the LSP
 1. Make sure sapf-lsp is on your PATH (if you use `cargo install --path .` to build the above repo, I think that should work).
 1. Make sure the sapf executable is also on your PATH.
