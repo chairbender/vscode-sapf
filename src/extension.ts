@@ -16,12 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     let clientOptions: LanguageClientOptions = {
-        documentSelector: [{ scheme: 'file', language: 'sapf' }],
-        middleware: {
-            async provideDocumentRangeSemanticTokens(document, token, next) {
-                return undefined; // sapf-lsp doesn't support this currently
-            },
-        },
+        documentSelector: [{ scheme: 'file', language: 'sapf' }]
     };
 
     client = new LanguageClient('SapfLanguageServer', 'sapf Language Server', serverOptions, clientOptions);
