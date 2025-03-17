@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind, Message, ErrorHandlerResult, CloseHandlerResult, CloseAction, ErrorAction } from 'vscode-languageclient/node';
-import pty from 'node-pty';
+import * as pty from 'node-pty';
 import { buffer } from 'stream/consumers';
 
 let client: LanguageClient;
-let replProcess: ChildProcessWithoutNullStreams | null = null;
+let replProcess: pty.IPty | null = null;
 let outputChannel = vscode.window.createOutputChannel("sapf");
 
 export function activate(context: vscode.ExtensionContext) {
@@ -83,8 +83,9 @@ function startRepl() {
     //replProcess = spawn("sapf", [], { stdio: 'overlapped', env: process.env, shell: true, cwd: process.env.HOME});
     //replProcess.stdout.pipe(process.stdout);
 
-    replProcess.stdout.on("data", handleEvent);// (data) => outputChannel.append(data.toString()));
-    replProcess.stderr.on("data", handleEvent);//outputChannel.append(data.toString()));
+    replProcess.onData(handleEvent);// (data) => outputChannel.append(data.toString()));
+    // replProcess.stdout.on("data", handleEvent);// (data) => outputChannel.append(data.toString()));
+    // replProcess.stderr.on("data", handleEvent);//outputChannel.append(data.toString()));
     //replProcess.stdin.on("data", handleEvent);
     // replProcess.stdout.on("close", (data) => handleEvent("data", data));
     // replProcess.stdout.on("data", (data) => handleEvent("data", data));
@@ -101,7 +102,7 @@ function startRepl() {
     // replProcess.stderr.on("readable", (data) => handleEvent("data", data));
     // replProcess.stderr.on("resume", (data) => handleEvent("data", data));
 
-    replProcess.addListener("exit", () => {
+    replProcess.onExit(() => {
         vscode.window.showInformationMessage("sapf exited.");
         replProcess = null;
     });
@@ -118,19 +119,16 @@ function killRepl() {
     if (!ensureRunning()) { return; }
 
     // TODO: kill on OSX not working seemingly
-    if (replProcess.kill()) {
-        vscode.window.showInformationMessage("sapf stopped.")
-        replProcess = null;
-    } else {
-        vscode.window.showInformationMessage("Unable to stop sapf.")
-    }
+    replProcess.kill();
+    vscode.window.showInformationMessage("sapf stopped.")
+    replProcess = null;
 }
 
 function sapfCommand(command: string): () => void {
     return function () {
         if (!ensureRunning()) { return; }
 
-        replProcess.stdin.write(command + "\n");
+        replProcess.write(command + "\n");
     };
 }
 
@@ -159,7 +157,7 @@ function flashRange(editor, range) {
 function evalSelection(editor: vscode.TextEditor, selectedText: string): boolean {
     if (selectedText) {
         flashRange(editor, editor.selection);
-        replProcess.stdin.write(selectedText + "\n");
+        replProcess.write(selectedText + "\n");
         // TODO: actually wait for evaluation to complete
         return true;
     }
@@ -197,7 +195,7 @@ function evalParagraph() {
             }
 
             flashRange(editor, range);
-            replProcess.stdin.write(paragraph + "\n");
+            replProcess.write(paragraph + "\n");
         }
     });
 
@@ -257,7 +255,7 @@ function evalBlock() {
 
             // Send to REPL
             flashRange(editor, range);
-            replProcess.stdin.write(block + "\n");
+            replProcess.write(block + "\n");
         }
     });
 }
@@ -279,7 +277,7 @@ function evalLine() {
 
             // Send to REPL
             flashRange(editor, new vscode.Range(cursorPos.line, 0, cursorPos.line, line.length));
-            replProcess.stdin.write(line + "\n");
+            replProcess.write(line + "\n");
         }
     });
 }
