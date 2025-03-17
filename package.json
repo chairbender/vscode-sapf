@@ -140,10 +140,10 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.21.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "electron": "~34.3.0"
   },
   "dependencies": {
-    "electron": "~34.3.0",
     "node-pty": "^1.0.0",
     "vscode-languageclient": "^9.0.1"
   }
