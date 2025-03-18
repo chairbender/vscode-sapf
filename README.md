@@ -28,6 +28,8 @@ this if it proves to be annoying, but it makes this extension rather simple whic
 
 ## Usage
 
+Default keybinds are similar to supercollider defaults.
+
 sapf-lsp and an sapf terminal will start when opening an sapf file for the first time in a session.
 This can be changed in settings. The lsp is completely independent of the sapf process - it doesn't care whether
 sapf is running or not.
