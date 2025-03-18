@@ -2,15 +2,19 @@
 
 WIP. Contributions welcome. I'm a typescript novice.
 
-This relies on https://github.com/vasilymilovidov/sapf-lsp for the LSP.
+This relies on the much-appreciated https://github.com/vasilymilovidov/sapf-lsp for the LSP.
 
 Based on the excellent supercollider VS Code extension: https://github.com/scztt/vscode-supercollider
+
+However, unlike the VS Code extension, interaction with sapf is done via the terminal. So you can use the commands
+provided by this extension to execute code, but you can also simply switch to the terminal and type commands directly. We will re-evaluate
+this if it proves to be annoying, but it makes this extension rather simple which has its benefits!
 
 ## Features
 
 1. Connect to the sapf-lsp for highlighting, autocompletion, etc... see https://github.com/vasilymilovidov/sapf-lsp for what features are supported (they should work mostly
 "automatically" in VS Code).
-2. Interact with sapf (evaluate code, start, stop, etc...)
+2. Interact with sapf via terminal (evaluate code, start, stop, etc...)
 
 ## Setup
 1. Download the .vsix file from the latest release: https://github.com/chairbender/vscode-sapf/releases
@@ -20,19 +24,20 @@ Based on the excellent supercollider VS Code extension: https://github.com/scztt
 1. Make sure the sapf executable is also on your PATH.
 1. If you had to change your PATH variable, you may need to restart VSCode to pick up the change.
 1. Extension will apply when file ends in .sapf or can be chosen manually via VSCode (bottom right).
-    - ATTOW you may get an error popup "Request textDocument/semanticTokens/range failed.". You can ignore it. Working on it...
 1. Bring up the command palette and type "sapf" to see available commands and their keybinds.
 
 ## Usage
 
-sapf-lsp and sapf will start when opening an sapf file for the first time in a session.
-This can be changed in settings.
+sapf-lsp and an sapf terminal will start when opening an sapf file for the first time in a session.
+This can be changed in settings. The lsp is completely independent of the sapf process - it doesn't care whether
+sapf is running or not.
+
+The extension doesn't know whether sapf is running in the terminal. Or what output was provided. It can only send commands. So it doesn't make
+any assumptions wheter sapf is running or not other than when it first creates the terminal window. If you manually quit out of 
+sapf, or it crashes, you will need to restart it yourself (you can use the "start sapf" command or manually start it via
+the sapf terminal). On the plus side, this means you are also free to type into the SAPF repl directly.
 
 Open the command palette and type "sapf" for available commands / keybinds.
-
-## Known Issues
-
-Getting "Request textDocument/semanticTokens/range failed" popup when first launching: https://github.com/vasilymilovidov/sapf-lsp/issues/1
 
 ## Development
 
@@ -49,3 +54,17 @@ Getting "Request textDocument/semanticTokens/range failed" popup when first laun
     ```
 
 3. Follow setup steps above to ensure you have sapf-lsp and sapf executables on your PATH.
+
+## Design Notes
+
+The first iteration of this used the output window (similar to vscode-supercollider). However, I found it was difficult
+to make this work reliably in a cross-platform way, because sapf behaves differently on different systems when connected via
+pipe. We would have to use node-pty to work around that, which brings some complexity due to incompatibilities with
+certain electron versions (but not impossible - branch fix-os shows how it can potentially be done in a cross-platform way
+if desired in the future). 
+
+Also, it prevents directly typing into the REPL if desired. So, I opted
+to simply just send commands to the terminal.
+
+If this proves to be annoying or inconvenient, we can switch to the node-pty approach or even make it configurable which
+approach is used instead!

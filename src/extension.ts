@@ -3,16 +3,15 @@ import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind, Message, ErrorHandlerResult, CloseHandlerResult, CloseAction, ErrorAction } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
-let replProcess: ChildProcessWithoutNullStreams | null = null;
-let outputChannel = vscode.window.createOutputChannel("sapf");
+let replTerminal: vscode.Terminal | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-    const configuration = vscode.workspace.getConfiguration()
+    const configuration = vscode.workspace.getConfiguration();
 
     let serverCommand = configuration.get<string>("sapf.lsp.cmd");
     let serverOptions: ServerOptions = {
-        run: { command: serverCommand, options: { env: { PATH: process.env.path } }, transport: TransportKind.stdio },
-        debug: { command: serverCommand, options: { env: { PATH: process.env.path } }, transport: TransportKind.stdio }
+        run: { command: serverCommand, options: { env: { PATH: process.env.PATH, HOME: process.env.HOME } }, transport: TransportKind.stdio },
+        debug: { command: serverCommand, options: { env: { PATH: process.env.PATH, HOME: process.env.HOME } }, transport: TransportKind.stdio }
     };
 
     let clientOptions: LanguageClientOptions = {
@@ -20,14 +19,11 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     client = new LanguageClient('SapfLanguageServer', 'sapf Language Server', serverOptions, clientOptions);
-    outputChannel.show();
-
-    outputChannel.appendLine("Starting sapf language server...")
     client.start();
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("sapf.start", startRepl),
-        vscode.commands.registerCommand("sapf.kill", killRepl),
+        vscode.commands.registerCommand("sapf.start", ensureTerminal),
+        vscode.commands.registerCommand("sapf.quit", sapfCommand("quit")),
         vscode.commands.registerCommand("sapf.stop", sapfCommand("stop")),
         vscode.commands.registerCommand("sapf.clear", sapfCommand("clear")),
         vscode.commands.registerCommand("sapf.cleard", sapfCommand("cleard")),
@@ -37,57 +33,50 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand("sapf.helpAll", sapfCommand("helpall"))
     );
 
-
     if (configuration.get<boolean>("sapf.autostart")) {
-        startRepl();
-    }
-}
-
-function ensureRunning(): boolean {
-    if (!replProcess) {
-        vscode.window.showErrorMessage("sapf is not running.");
-    }
-    return replProcess != null;
-}
-
-function startRepl() {
-    if (replProcess) {
-        vscode.window.showInformationMessage("sapf is already running.");
-        return;
+        ensureTerminal();
     }
 
-    const configuration = vscode.workspace.getConfiguration()
-
-    let command = configuration.get<string>("sapf.sapf.cmd");
-
-    replProcess = spawn(command, [], { env: { PATH: process.env.PATH }, shell: true });
-
-    replProcess.stdout.on("data", (data) => outputChannel.append(data.toString()));
-    replProcess.stderr.on("data", (data) => outputChannel.append(data.toString()));
-
-    replProcess.on("exit", () => {
-        vscode.window.showInformationMessage("sapf exited.");
-        replProcess = null;
+    vscode.window.onDidCloseTerminal((closedTerminal) => {
+        if (closedTerminal === replTerminal) {
+            replTerminal = undefined;
+            vscode.window.showWarningMessage("sapf terminal closed - sapf exited");
+        }
     });
-
-    outputChannel.show();
 }
 
-function killRepl() {
-    if (!ensureRunning()) { return; }
+export function deactivate() {
+    client?.stop();
+    replTerminal?.dispose();
+}
 
-    if (replProcess.kill()) {
-        vscode.window.showInformationMessage("sapf stopped.")
+function ensureTerminal() {
+    if (!replTerminal) {
+        replTerminal = vscode.window.createTerminal("sapf");
+        replTerminal.show(true);
+
+        const configuration = vscode.workspace.getConfiguration()
+        let command = configuration.get<string>("sapf.sapf.cmd");
+        replTerminal.sendText(command);
     } else {
-        vscode.window.showInformationMessage("Unable to stop sapf.")
+        replTerminal.show(true); // Reshow the existing terminal
     }
+}
+
+function sendCodeToRepl(code: string) {
+    if (!replTerminal) {
+        vscode.window.showWarningMessage("REPL is not running. Launching it now...");
+        ensureTerminal();
+    } else {
+        replTerminal.show(true); // Bring it to focus
+    }
+
+    replTerminal.sendText(code);
 }
 
 function sapfCommand(command: string): () => void {
     return function () {
-        if (!ensureRunning()) { return; }
-
-        replProcess.stdin.write(command + "\n");
+        sendCodeToRepl(command);
     };
 }
 
@@ -116,15 +105,13 @@ function flashRange(editor, range) {
 function evalSelection(editor: vscode.TextEditor, selectedText: string): boolean {
     if (selectedText) {
         flashRange(editor, editor.selection);
-        replProcess.stdin.write(selectedText + "\n");
-        // TODO: actually wait for evaluation to complete
+        sendCodeToRepl(selectedText);
         return true;
     }
     return false;
 }
 
 function evalParagraph() {
-    if (!ensureRunning()) { return; }
     requireEditor((editor) => {
         const selectedText = editor.document.getText(editor.selection);
         if (!evalSelection(editor, selectedText)) {
@@ -154,14 +141,13 @@ function evalParagraph() {
             }
 
             flashRange(editor, range);
-            replProcess.stdin.write(paragraph + "\n");
+            sendCodeToRepl(paragraph);
         }
     });
 
 }
 
 function evalBlock() {
-    if (!ensureRunning()) { return; }
     requireEditor((editor) => {
         const selectedText = editor.document.getText(editor.selection);
         if (!evalSelection(editor, selectedText)) {
@@ -214,13 +200,12 @@ function evalBlock() {
 
             // Send to REPL
             flashRange(editor, range);
-            replProcess.stdin.write(block + "\n");
+            sendCodeToRepl(block);
         }
     });
 }
 
 function evalLine() {
-    if (!ensureRunning()) { return; }
     requireEditor((editor) => {
         const selectedText = editor.document.getText(editor.selection);
         if (!evalSelection(editor, selectedText)) {
@@ -236,11 +221,7 @@ function evalLine() {
 
             // Send to REPL
             flashRange(editor, new vscode.Range(cursorPos.line, 0, cursorPos.line, line.length));
-            replProcess.stdin.write(line + "\n");
+            sendCodeToRepl(line);
         }
     });
-}
-
-export function deactivate(): Thenable<void> | undefined {
-    return client ? client.stop() : undefined;
 }
