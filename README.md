@@ -7,8 +7,10 @@ This relies on the much-appreciated https://github.com/vasilymilovidov/sapf-lsp 
 Based on the excellent supercollider VS Code extension: https://github.com/scztt/vscode-supercollider
 
 However, unlike the VS Code extension, interaction with sapf is done via the terminal. So you can use the commands
-provided by this extension to execute code, but you can also simply switch to the terminal and type commands directly. We will re-evaluate
-this if it proves to be annoying, but it makes this extension rather simple which has its benefits!
+provided by this extension to execute code, but you can also simply switch to the terminal and type commands directly. 
+
+Please give feedback if you would prefer it to not interact directly with your terminal, and we can switch it to a more "controlled"
+approach!
 
 ## Features
 
