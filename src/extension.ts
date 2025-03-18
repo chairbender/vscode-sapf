@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
     client.start();
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("sapf.start", ensureTerminal),
+        vscode.commands.registerCommand("sapf.start", startSapf),
         vscode.commands.registerCommand("sapf.quit", sapfCommand("quit")),
         vscode.commands.registerCommand("sapf.stop", sapfCommand("stop")),
         vscode.commands.registerCommand("sapf.clear", sapfCommand("clear")),
@@ -48,6 +48,14 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
     client?.stop();
     replTerminal?.dispose();
+}
+
+function startSapf() {
+    ensureTerminal()
+    const configuration = vscode.workspace.getConfiguration()
+    let command = configuration.get<string>("sapf.sapf.cmd");
+    replTerminal.sendText(command);
+    replTerminal.show(true); // Reshow the existing terminal
 }
 
 function ensureTerminal() {
